@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 220 30% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 12%;
+
+    --primary: 220 65% 18%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 174 62% 42%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 37 95% 55%;
+    --accent-foreground: 220 30% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 20% 90%;
+    --input: 214 20% 90%;
+    --ring: 220 65% 18%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 220 65% 14%;
+    --sidebar-foreground: 210 20% 94%;
+    --sidebar-primary: 174 62% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 50% 22%;
+    --sidebar-accent-foreground: 210 20% 94%;
+    --sidebar-border: 220 40% 22%;
+    --sidebar-ring: 174 62% 50%;
+
+    --success: 152 60% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 37 95% 55%;
+    --warning-foreground: 220 30% 12%;
+    --info: 205 85% 55%;
+    --info-foreground: 0 0% 100%;
+
+    --teacher: 220 65% 18%;
+    --teacher-foreground: 210 40% 98%;
+    --student: 174 62% 42%;
+    --student-foreground: 0 0% 100%;
+    --parent: 280 55% 50%;
+    --parent-foreground: 0 0% 100%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(220 65% 18%), hsl(220 55% 28%), hsl(174 62% 42%));
+    --gradient-teacher: linear-gradient(135deg, hsl(220 65% 18%), hsl(220 50% 30%));
+    --gradient-student: linear-gradient(135deg, hsl(174 62% 42%), hsl(174 55% 35%));
+    --gradient-parent: linear-gradient(135deg, hsl(280 55% 50%), hsl(280 45% 40%));
+    --gradient-attention: linear-gradient(135deg, hsl(152 60% 42%), hsl(174 62% 42%));
+
+    --shadow-card: 0 4px 24px -4px hsl(220 30% 12% / 0.08);
+    --shadow-elevated: 0 12px 40px -8px hsl(220 30% 12% / 0.15);
+    --shadow-glow-primary: 0 0 30px -5px hsl(220 65% 18% / 0.3);
+    --shadow-glow-secondary: 0 0 30px -5px hsl(174 62% 42% / 0.3);
+
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  .dark {
+    --background: 220 30% 8%;
+    --foreground: 210 20% 94%;
+    --card: 220 30% 12%;
+    --card-foreground: 210 20% 94%;
+    --popover: 220 30% 12%;
+    --popover-foreground: 210 20% 94%;
+    --primary: 174 62% 50%;
+    --primary-foreground: 220 30% 8%;
+    --secondary: 220 50% 30%;
+    --secondary-foreground: 210 20% 94%;
+    --muted: 220 25% 16%;
+    --muted-foreground: 215 16% 60%;
+    --accent: 37 95% 55%;
+    --accent-foreground: 220 30% 8%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 25% 18%;
+    --input: 220 25% 18%;
+    --ring: 174 62% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer components {
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  .gradient-teacher {
+    background: var(--gradient-teacher);
+  }
+  .gradient-student {
+    background: var(--gradient-student);
+  }
+  .gradient-parent {
+    background: var(--gradient-parent);
+  }
+  .gradient-attention {
+    background: var(--gradient-attention);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  .shadow-glow-primary {
+    box-shadow: var(--shadow-glow-primary);
+  }
+  .shadow-glow-secondary {
+    box-shadow: var(--shadow-glow-secondary);
+  }
+}
