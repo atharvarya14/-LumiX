@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Camera, Wifi, WifiOff } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface AttentionMonitorProps {
   compact?: boolean;
@@ -9,6 +9,7 @@ interface AttentionMonitorProps {
 const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
   const [attention, setAttention] = useState(87);
   const [isActive, setIsActive] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -19,6 +20,28 @@ const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  // ✅ Camera permission
+  useEffect(() => {
+    if (!isActive) return;
+
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Camera access denied:", error);
+      }
+    };
+
+    startCamera();
+  }, [isActive]);
 
   const getColor = () => {
     if (attention >= 75) return "text-success";
@@ -41,7 +64,9 @@ const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
             <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-success animate-pulse" />
           )}
         </div>
-        <span className={`text-sm font-semibold ${getColor()}`}>{Math.round(attention)}%</span>
+        <span className={`text-sm font-semibold ${getColor()}`}>
+          {Math.round(attention)}%
+        </span>
       </div>
     );
   }
@@ -49,11 +74,15 @@ const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display font-semibold text-card-foreground">Attention Monitor</h3>
+        <h3 className="font-display font-semibold text-card-foreground">
+          Attention Monitor
+        </h3>
         <button
           onClick={() => setIsActive(!isActive)}
           className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
-            isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+            isActive
+              ? "bg-success/10 text-success"
+              : "bg-muted text-muted-foreground"
           }`}
         >
           {isActive ? <Wifi size={12} /> : <WifiOff size={12} />}
@@ -62,15 +91,21 @@ const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Webcam preview mock */}
+        {/* Webcam preview with real camera */}
         <div className="relative h-28 w-40 overflow-hidden rounded-lg bg-foreground/5">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Camera size={32} className="text-muted-foreground/40" />
-          </div>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="h-full w-full object-cover"
+          />
           {isActive && (
             <div className="absolute left-2 top-2 flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
-              <span className="text-[10px] font-medium text-destructive">REC</span>
+              <span className="text-[10px] font-medium text-destructive">
+                REC
+              </span>
             </div>
           )}
         </div>
@@ -79,7 +114,14 @@ const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
         <div className="flex-1">
           <div className="relative mx-auto h-24 w-24">
             <svg className="h-24 w-24 -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
+              <circle
+                cx="50"
+                cy="50"
+                r="42"
+                fill="none"
+                stroke="hsl(var(--border))"
+                strokeWidth="8"
+              />
               <motion.circle
                 cx="50"
                 cy="50"
@@ -101,8 +143,12 @@ const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-2xl font-bold font-display ${getColor()}`}>{Math.round(attention)}%</span>
-              <span className="text-[10px] text-muted-foreground">Focus</span>
+              <span className={`text-2xl font-bold font-display ${getColor()}`}>
+                {Math.round(attention)}%
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Focus
+              </span>
             </div>
           </div>
         </div>
@@ -114,9 +160,14 @@ const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
           { label: "Peak", value: "96%" },
           { label: "Low", value: "45%" },
         ].map((stat) => (
-          <div key={stat.label} className={`rounded-lg ${getBgColor()} px-3 py-2 text-center`}>
+          <div
+            key={stat.label}
+            className={`rounded-lg ${getBgColor()} px-3 py-2 text-center`}
+          >
             <p className="text-xs text-muted-foreground">{stat.label}</p>
-            <p className={`font-semibold font-display ${getColor()}`}>{stat.value}</p>
+            <p className={`font-semibold font-display ${getColor()}`}>
+              {stat.value}
+            </p>
           </div>
         ))}
       </div>
