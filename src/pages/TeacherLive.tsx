@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Video, Mic, MicOff, MonitorUp, Users, MessageSquare, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AttentionMonitor from "@/components/AttentionMonitor";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const participants = [
   { name: "Alex Johnson", attention: 92 },
@@ -15,6 +15,27 @@ const participants = [
 
 const TeacherLive = () => {
   const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // ✅ Camera permission
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Camera permission denied:", error);
+      }
+    };
+
+    startCamera();
+  }, []);
 
   return (
     <DashboardLayout role="teacher">
@@ -27,14 +48,21 @@ const TeacherLive = () => {
         <div className="space-y-4 lg:col-span-2">
           {/* Video area */}
           <div className="relative aspect-video rounded-xl bg-foreground/5 border border-border overflow-hidden flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <Video size={48} className="mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Live class stream</p>
-            </div>
+
+            {/* ✅ REAL CAMERA VIDEO */}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted={isMuted}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground">
               <span className="h-2 w-2 rounded-full bg-destructive-foreground animate-pulse" />
               LIVE
             </div>
+
             <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
               <div className="flex items-center gap-2 rounded-lg bg-foreground/80 px-3 py-1.5 text-xs text-background">
                 <Users size={14} /> {participants.length} students
@@ -113,3 +141,4 @@ const TeacherLive = () => {
 };
 
 export default TeacherLive;
+
