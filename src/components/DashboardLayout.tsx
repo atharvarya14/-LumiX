@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -18,6 +18,8 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 type Role = "teacher" | "student" | "parent";
 
@@ -36,6 +38,7 @@ const navItems: Record<Role, NavItem[]> = {
     { label: "Students", path: "/teacher/students", icon: <Users size={20} /> },
     { label: "Attention Reports", path: "/teacher/attention", icon: <Eye size={20} /> },
     { label: "Assignments", path: "/teacher/assignments", icon: <ClipboardList size={20} /> },
+    { label: "Messages", path: "/teacher/messages", icon: <MessageSquare size={20} /> },
     { label: "Announcements", path: "/teacher/announcements", icon: <Bell size={20} /> },
   ],
   student: [
@@ -77,6 +80,26 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ role, children }: DashboardLayoutProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully.",
+      });
+      navigate("/");
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to logout. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -111,12 +134,14 @@ const DashboardLayout = ({ role, children }: DashboardLayoutProps) => {
         </nav>
 
         <div className="border-t border-border p-3">
-          <Link to="/">
-            <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground">
-              <LogOut size={18} />
-              Switch Role
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+            onClick={handleLogout}
+          >
+            <LogOut size={18} />
+            Logout
+          </Button>
         </div>
       </aside>
 

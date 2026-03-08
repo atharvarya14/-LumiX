@@ -62,11 +62,30 @@ const AttentionMonitor = ({ compact = false }: AttentionMonitorProps) => {
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Webcam preview mock */}
-        <div className="relative h-28 w-40 overflow-hidden rounded-lg bg-foreground/5">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Camera size={32} className="text-muted-foreground/40" />
-          </div>
+        {/* Webcam preview */}
+        <div className="relative h-28 w-40 overflow-hidden rounded-lg bg-black">
+          <video
+            autoPlay
+            playsInline
+            muted
+            className="h-full w-full object-cover"
+            style={{ display: isActive ? 'block' : 'none' }}
+            ref={(video) => {
+              if (video && isActive) {
+                navigator.mediaDevices
+                  .getUserMedia({ video: { facingMode: 'user' }, audio: false })
+                  .then((stream) => {
+                    video.srcObject = stream;
+                  })
+                  .catch((err) => console.error('Camera error:', err));
+              }
+            }}
+          />
+          {!isActive && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Camera size={32} className="text-muted-foreground/40" />
+            </div>
+          )}
           {isActive && (
             <div className="absolute left-2 top-2 flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-destructive animate-pulse" />

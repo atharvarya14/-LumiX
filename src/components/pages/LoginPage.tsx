@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 type Role = "teacher" | "student" | "parent";
 
@@ -39,26 +40,70 @@ const LoginPage = ({ role }: { role: Role }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
   const config = roleConfig[role];
 
-  const handleLogin = (e: React.FormEvent) => {
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (!password.trim()) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.trim() || !password.trim()) {
-      toast({ title: "Missing fields", description: "Please enter both email and password.", variant: "destructive" });
+    if (!validateForm()) {
+      toast({
+        title: "Validation error",
+        description: "Please fix the errors below.",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsLoading(true);
+    setErrors({});
 
-    // Demo login — accept any credentials
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({ title: "Welcome back!", description: `Logged in as ${config.label}` });
+    try {
+      await login({ email, password });
+      toast({
+        title: "Welcome back!",
+        description: `Logged in as ${config.label}`,
+      });
       navigate(config.dashboard);
-    }, 800);
+    } catch (err: any) {
+      const message = err?.message || "Login failed. Please try again.";
+      toast({
+        title: "Login failed",
+        description: message,
+        variant: "destructive",
+      });
+
+      // Check if it's a validation error from backend
+      if (message.includes("email")) {
+        setErrors({ email: message });
+      } else {
+        setErrors({ password: message });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -94,28 +139,40 @@ const LoginPage = ({ role }: { role: Role }) => {
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className={errors.email ? "text-destructive" : ""}>
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errors.email) setErrors({ ...errors, email: "" });
+                  }}
                   autoComplete="email"
+                  className={errors.email ? "border-destructive" : ""}
                 />
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className={errors.password ? "text-destructive" : ""}>
+                  Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errors.password) setErrors({ ...errors, password: "" });
+                    }}
                     autoComplete="current-password"
-                    className="pr-10"
+                    className={`pr-10 ${errors.password ? "border-destructive" : ""}`}
                   />
                   <button
                     type="button"
@@ -126,9 +183,10 @@ const LoginPage = ({ role }: { role: Role }) => {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
 
-              <div className="flex items-center justify-end">
+              <div className="flex items-center justify-between">
                 <button type="button" className="text-xs text-primary hover:underline">
                   Forgot password?
                 </button>
@@ -139,8 +197,11 @@ const LoginPage = ({ role }: { role: Role }) => {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in…" : "Sign In"}
               </Button>
-              <p className="text-xs text-muted-foreground">
-                Demo mode — enter any email & password to continue
+              <p className="text-center text-xs text-muted-foreground">
+                Don't have an account?{" "}
+                <Link to="/register" className="text-primary hover:underline">
+                  Sign up here
+                </Link>
               </p>
             </CardFooter>
           </form>

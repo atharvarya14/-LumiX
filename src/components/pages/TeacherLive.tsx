@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Video, Mic, MicOff, MonitorUp, Users, MessageSquare, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AttentionMonitor from "@/components/AttentionMonitor";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const participants = [
   { name: "Alex Johnson", attention: 92 },
@@ -15,6 +15,57 @@ const participants = [
 
 const TeacherLive = () => {
   const [isMuted, setIsMuted] = useState(false);
+  const [isLive, setIsLive] = useState(true);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Initialize camera on mount
+  useEffect(() => {
+    const initCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: !isMuted,
+        });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        setCameraError(null);
+      } catch (error: any) {
+        console.error("Camera error:", error);
+        setCameraError(error.message || "Failed to access camera");
+      }
+    };
+
+    if (isLive) {
+      initCamera();
+    }
+
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [isLive]);
+
+  // Handle mute/unmute
+  useEffect(() => {
+    if (streamRef.current) {
+      const audioTracks = streamRef.current.getAudioTracks();
+      audioTracks.forEach((track) => {
+        track.enabled = !isMuted;
+      });
+    }
+  }, [isMuted]);
+
+  const handleEndClass = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+    }
+    setIsLive(false);
+  };
 
   return (
     <DashboardLayout role="teacher">
@@ -27,30 +78,51 @@ const TeacherLive = () => {
         <div className="space-y-4 lg:col-span-2">
           {/* Video area */}
           <div className="relative aspect-video rounded-xl bg-foreground/5 border border-border overflow-hidden flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <Video size={48} className="mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Live class stream</p>
-            </div>
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground">
-              <span className="h-2 w-2 rounded-full bg-destructive-foreground animate-pulse" />
-              LIVE
-            </div>
-            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 rounded-lg bg-foreground/80 px-3 py-1.5 text-xs text-background">
-                <Users size={14} /> {participants.length} students
+            {cameraError ? (
+              <div className="text-center text-destructive p-4">
+                <Video size={48} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm font-medium">Camera Error</p>
+                <p className="text-xs mt-1">{cameraError}</p>
+                <p className="text-xs text-muted-foreground mt-2">Please check camera permissions and try again</p>
               </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => setIsMuted(!isMuted)} className="gap-1.5">
-                  {isMuted ? <MicOff size={14} /> : <Mic size={14} />}
-                </Button>
-                <Button size="sm" variant="secondary" className="gap-1.5">
-                  <MonitorUp size={14} /> Share Screen
-                </Button>
-                <Button size="sm" variant="destructive">
-                  End Class
-                </Button>
+            ) : isLive ? (
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover bg-black"
+              />
+            ) : (
+              <div className="text-center text-muted-foreground">
+                <Video size={48} className="mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Class ended</p>
               </div>
-            </div>
+            )}
+            {isLive && (
+              <>
+                <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground">
+                  <span className="h-2 w-2 rounded-full bg-destructive-foreground animate-pulse" />
+                  LIVE
+                </div>
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2 rounded-lg bg-foreground/80 px-3 py-1.5 text-xs text-background">
+                    <Users size={14} /> {participants.length} students
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => setIsMuted(!isMuted)} className="gap-1.5">
+                      {isMuted ? <MicOff size={14} /> : <Mic size={14} />}
+                    </Button>
+                    <Button size="sm" variant="secondary" className="gap-1.5">
+                      <MonitorUp size={14} /> Share Screen
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={handleEndClass}>
+                      End Class
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Chat */}

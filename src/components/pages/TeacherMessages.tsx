@@ -3,7 +3,7 @@ import { MessageSquare, Bell } from "lucide-react";
 import { useGetInbox } from "@/hooks/api/useMessages";
 import { useMemo } from "react";
 
-const ParentMessages = () => {
+const TeacherMessages = () => {
   const { data: inboxMessages = [], isLoading } = useGetInbox();
 
   // Separate announcements from regular messages
@@ -17,10 +17,10 @@ const ParentMessages = () => {
   const displayMessages = [...announcements, ...regularMessages];
 
   return (
-    <DashboardLayout role="parent">
+    <DashboardLayout role="teacher">
       <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-foreground">Messages</h1>
-        <p className="text-muted-foreground">Communication from teachers and announcements</p>
+        <p className="text-muted-foreground">Communication from students, parents, and announcements</p>
       </div>
 
       {isLoading ? (
@@ -84,4 +84,4 @@ const ParentMessages = () => {
   );
 };
 
-export default ParentMessages;
+export default TeacherMessages;
